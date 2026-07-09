@@ -294,82 +294,322 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF260307), Color(0xFF08090D)],
-          ),
-        ),
+      body: CinemaBackdrop(
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const CineMindLogo(),
-                  const SizedBox(height: 28),
-                  Text(
-                    'Movie AI для твого вечора',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 430),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const CineMindLogo(),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Movie AI для твого вечора',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w900),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Flutter + FastAPI + PostgreSQL + Content-Based Filtering',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white.withValues(alpha: .7)),
-                  ),
-                  const SizedBox(height: 28),
-                  SegmentedButton<bool>(
-                    segments: const [
-                      ButtonSegment(
-                        value: true,
-                        label: Text('Реєстрація'),
-                        icon: Icon(Icons.person_add_alt_1),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Персональний кінотеатр із рекомендаціями',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: .72),
                       ),
-                      ButtonSegment(
-                        value: false,
-                        label: Text('Вхід'),
-                        icon: Icon(Icons.login),
-                      ),
-                    ],
-                    selected: {register},
-                    onSelectionChanged: (value) =>
-                        setState(() => register = value.first),
-                  ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Ім’я',
-                      prefixIcon: Icon(Icons.person_outline),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.mail_outline),
+                    const SizedBox(height: 24),
+                    FrostedAuthPanel(
+                      register: register,
+                      nameController: nameController,
+                      emailController: emailController,
+                      onModeChanged: (value) =>
+                          setState(() => register = value),
+                      onSubmit: () => widget.onSignIn(nameController.text),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton.icon(
-                    onPressed: () => widget.onSignIn(nameController.text),
-                    icon: const Icon(Icons.play_arrow_rounded),
-                    label: Text(register ? 'Створити профіль' : 'Увійти'),
-                  ),
-                ],
+                    const SizedBox(height: 18),
+                    const TechPillRow(),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class CinemaBackdrop extends StatelessWidget {
+  const CinemaBackdrop({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF310208), Color(0xFF08090D), Color(0xFF101827)],
+            ),
+          ),
+        ),
+        const Positioned(
+          top: -90,
+          right: -70,
+          child: _GlowOrb(color: Color(0xFFE50914), size: 230),
+        ),
+        const Positioned(
+          bottom: 90,
+          left: -115,
+          child: _GlowOrb(color: Color(0xFF7C3AED), size: 260),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(painter: FilmBackdropPainter()),
+          ),
+        ),
+        child,
+      ],
+    );
+  }
+}
+
+class _GlowOrb extends StatelessWidget {
+  const _GlowOrb({required this.color, required this.size});
+
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: .18),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: .36),
+            blurRadius: 90,
+            spreadRadius: 34,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class FilmBackdropPainter extends CustomPainter {
+  const FilmBackdropPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: .045)
+      ..strokeWidth = 1.2;
+    final framePaint = Paint()
+      ..color = Colors.white.withValues(alpha: .06)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.1;
+
+    for (var i = -2; i < 10; i++) {
+      final y = i * 92.0 + 28;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y + 54), linePaint);
+    }
+
+    for (var i = 0; i < 10; i++) {
+      final x = 18.0 + i * 44;
+      final y = 78.0 + (i.isEven ? 0 : 38);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, y, 28, 42),
+          const Radius.circular(6),
+        ),
+        framePaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class FrostedAuthPanel extends StatelessWidget {
+  const FrostedAuthPanel({
+    super.key,
+    required this.register,
+    required this.nameController,
+    required this.emailController,
+    required this.onModeChanged,
+    required this.onSubmit,
+  });
+
+  final bool register;
+  final TextEditingController nameController;
+  final TextEditingController emailController;
+  final ValueChanged<bool> onModeChanged;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF11131B).withValues(alpha: .82),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: .09)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0xAA000000),
+            blurRadius: 34,
+            offset: Offset(0, 18),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(
+                value: true,
+                label: Text('Реєстрація'),
+                icon: Icon(Icons.person_add_alt_1),
+              ),
+              ButtonSegment(
+                value: false,
+                label: Text('Вхід'),
+                icon: Icon(Icons.login),
+              ),
+            ],
+            selected: {register},
+            onSelectionChanged: (value) => onModeChanged(value.first),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              labelText: 'Ім’я',
+              prefixIcon: Icon(Icons.person_outline),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: emailController,
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              prefixIcon: Icon(Icons.mail_outline),
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: onSubmit,
+            icon: const Icon(Icons.play_arrow_rounded),
+            label: Text(register ? 'Створити профіль' : 'Увійти'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TechPillRow extends StatelessWidget {
+  const TechPillRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
+      children: const [
+        _TinyTechPill(label: 'Flutter'),
+        _TinyTechPill(label: 'FastAPI'),
+        _TinyTechPill(label: 'PostgreSQL'),
+      ],
+    );
+  }
+}
+
+class _TinyTechPill extends StatelessWidget {
+  const _TinyTechPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: .08)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+class BrandWordmark extends StatelessWidget {
+  const BrandWordmark({super.key, this.compact = false});
+
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: compact ? 28 : 34,
+          height: compact ? 28 : 34,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE50914), Color(0xFFFF6B6B)],
+            ),
+            borderRadius: BorderRadius.circular(9),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x66E50914),
+                blurRadius: 18,
+                offset: Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Icon(
+            Icons.movie_filter_rounded,
+            color: Colors.white,
+            size: compact ? 17 : 20,
+          ),
+        ),
+        const SizedBox(width: 9),
+        ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [Color(0xFFFFF1F2), Color(0xFFFF2935)],
+          ).createShader(bounds),
+          child: Text(
+            'CineMind',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: compact ? 22 : 28,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -382,33 +622,29 @@ class CineMindLogo extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 78,
-          height: 78,
+          width: 82,
+          height: 82,
           decoration: BoxDecoration(
-            color: const Color(0xFFE50914),
-            borderRadius: BorderRadius.circular(18),
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE50914), Color(0xFFFF4D5A)],
+            ),
+            borderRadius: BorderRadius.circular(22),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x99E50914),
-                blurRadius: 36,
+                blurRadius: 38,
                 spreadRadius: 2,
               ),
             ],
           ),
           child: const Icon(
             Icons.local_movies_rounded,
-            size: 42,
+            size: 44,
             color: Colors.white,
           ),
         ),
         const SizedBox(height: 14),
-        Text(
-          'CineMind',
-          style: Theme.of(context).textTheme.displaySmall?.copyWith(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0,
-          ),
-        ),
+        const BrandWordmark(),
       ],
     );
   }
@@ -444,43 +680,160 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Вподобання')),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text(
-            'Що тобі подобається?',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 8),
-          const Text('CineMind використає жанри для Content-Based Filtering.'),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
+      body: CinemaBackdrop(
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
             children: [
-              for (final genre in genres)
-                FilterChip(
-                  selected: selected.contains(genre),
-                  label: Text(genre),
-                  avatar: Icon(_genreIcon(genre), size: 18),
-                  onSelected: (value) {
-                    setState(() {
-                      value ? selected.add(genre) : selected.remove(genre);
-                    });
-                  },
+              const BrandWordmark(compact: true),
+              const SizedBox(height: 28),
+              Text(
+                'Збери свій кіно-ДНК',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
                 ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Обери настрої та жанри. CineMind підлаштує стрічку під тебе.',
+                style: TextStyle(color: Colors.white.withValues(alpha: .72)),
+              ),
+              const SizedBox(height: 22),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: genres.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.28,
+                ),
+                itemBuilder: (context, index) {
+                  final genre = genres[index];
+                  return PreferenceMoodCard(
+                    genre: genre,
+                    selected: selected.contains(genre),
+                    index: index,
+                    onTap: () {
+                      setState(() {
+                        selected.contains(genre)
+                            ? selected.remove(genre)
+                            : selected.add(genre);
+                      });
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 22),
+              FilledButton.icon(
+                onPressed: selected.isEmpty
+                    ? null
+                    : () => widget.onSave(selected),
+                icon: const Icon(Icons.auto_awesome),
+                label: const Text('Запустити персональну стрічку'),
+              ),
             ],
           ),
-          const SizedBox(height: 26),
-          FilledButton.icon(
-            onPressed: selected.isEmpty ? null : () => widget.onSave(selected),
-            icon: const Icon(Icons.auto_awesome),
-            label: const Text('Увімкнути рекомендації'),
+        ),
+      ),
+    );
+  }
+}
+
+class PreferenceMoodCard extends StatelessWidget {
+  const PreferenceMoodCard({
+    super.key,
+    required this.genre,
+    required this.selected,
+    required this.index,
+    required this.onTap,
+  });
+
+  final String genre;
+  final bool selected;
+  final int index;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palettes = [
+      [const Color(0xFF155E75), const Color(0xFF38BDF8)],
+      [const Color(0xFF7C2D12), const Color(0xFFF97316)],
+      [const Color(0xFF7F1D1D), const Color(0xFFE50914)],
+      [const Color(0xFF581C87), const Color(0xFFC084FC)],
+      [const Color(0xFF854D0E), const Color(0xFFFACC15)],
+      [const Color(0xFF111827), const Color(0xFF94A3B8)],
+      [const Color(0xFF166534), const Color(0xFF86EFAC)],
+      [const Color(0xFF312E81), const Color(0xFF818CF8)],
+    ];
+    final palette = palettes[index % palettes.length];
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: selected
+                ? palette
+                : [const Color(0xFF151821), const Color(0xFF0D0F14)],
           ),
-        ],
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected
+                ? Colors.white.withValues(alpha: .42)
+                : Colors.white.withValues(alpha: .08),
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: palette.last.withValues(alpha: .26),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  ),
+                ]
+              : null,
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -10,
+              top: -8,
+              child: Icon(
+                _genreIcon(genre),
+                size: 64,
+                color: Colors.white.withValues(alpha: .13),
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(_genreIcon(genre), color: Colors.white),
+                const Spacer(),
+                Text(
+                  genre,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 17,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  selected ? 'у стрічці' : 'натисни',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: .72),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -738,14 +1091,7 @@ class HeroBanner extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Text(
-                    'CineMind',
-                    style: TextStyle(
-                      color: Color(0xFFE50914),
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
+                  const BrandWordmark(compact: true),
                   const Spacer(),
                   CircleAvatar(
                     backgroundColor: Colors.white.withValues(alpha: .14),
