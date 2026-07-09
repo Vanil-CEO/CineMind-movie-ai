@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -14,20 +16,27 @@ class CineMindApp extends StatelessWidget {
       title: 'CineMind',
       theme: ThemeData(
         useMaterial3: true,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF08090D),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0E7C7B),
-          brightness: Brightness.light,
+          seedColor: const Color(0xFFE50914),
+          brightness: Brightness.dark,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF6F8F7),
+        fontFamily: 'Roboto',
         cardTheme: CardThemeData(
           elevation: 0,
-          color: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          color: const Color(0xFF151821),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          fillColor: const Color(0xFF151821),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
       home: const CineMindRoot(),
@@ -36,14 +45,18 @@ class CineMindApp extends StatelessWidget {
 }
 
 class Movie {
-  Movie({
+  const Movie({
     required this.id,
     required this.title,
     required this.year,
     required this.genres,
     required this.actors,
     required this.description,
-    required this.accent,
+    required this.source,
+    required this.palette,
+    required this.tagline,
+    required this.maturity,
+    required this.runtime,
   });
 
   final int id;
@@ -52,10 +65,14 @@ class Movie {
   final List<String> genres;
   final List<String> actors;
   final String description;
-  final Color accent;
+  final String source;
+  final List<Color> palette;
+  final String tagline;
+  final String maturity;
+  final String runtime;
 }
 
-final List<Movie> initialMovies = [
+const moviesSeed = [
   Movie(
     id: 1,
     title: 'Interstellar',
@@ -63,8 +80,12 @@ final List<Movie> initialMovies = [
     genres: ['Фантастика', 'Драма', 'Пригоди'],
     actors: ['Matthew McConaughey', 'Anne Hathaway'],
     description:
-        'Подорож крізь космос у пошуках нового дому для людства. Фільм добре підходить тим, хто любить наукову фантастику та емоційні історії.',
-    accent: const Color(0xFF155E75),
+        'Епічна космічна історія про пошук нового дому для людства, силу родини та межі науки.',
+    source: 'PostgreSQL demo',
+    palette: [Color(0xFF0F172A), Color(0xFF155E75), Color(0xFF38BDF8)],
+    tagline: 'Beyond time. Beyond Earth.',
+    maturity: '12+',
+    runtime: '2h 49m',
   ),
   Movie(
     id: 2,
@@ -73,8 +94,12 @@ final List<Movie> initialMovies = [
     genres: ['Marvel', 'Бойовик', 'Фантастика'],
     actors: ['Robert Downey Jr.', 'Chris Evans'],
     description:
-        'Фінальна битва Месників за майбутнє світу. Рекомендовано фанатам супергероїки, Marvel та масштабних бойовиків.',
-    accent: const Color(0xFF7C2D12),
+        'Фінальна битва Месників за майбутнє світу і один із наймасштабніших супергеройських фільмів.',
+    source: 'FastAPI demo',
+    palette: [Color(0xFF1E1B4B), Color(0xFF7C2D12), Color(0xFFF97316)],
+    tagline: 'Whatever it takes.',
+    maturity: '12+',
+    runtime: '3h 1m',
   ),
   Movie(
     id: 3,
@@ -83,8 +108,12 @@ final List<Movie> initialMovies = [
     genres: ['Фантастика', 'Трилер', 'Драма'],
     actors: ['Leonardo DiCaprio', 'Tom Hardy'],
     description:
-        'Команда проникає у сни людей, щоб змінювати ідеї. Це вибір для користувачів, яким подобаються складні сюжети та напруга.',
-    accent: const Color(0xFF4338CA),
+        'Складний трилер про сни, підсвідомість і команду, яка змінює ідеї всередині людського розуму.',
+    source: 'PostgreSQL demo',
+    palette: [Color(0xFF111827), Color(0xFF4338CA), Color(0xFFA78BFA)],
+    tagline: 'Your mind is the scene.',
+    maturity: '16+',
+    runtime: '2h 28m',
   ),
   Movie(
     id: 4,
@@ -93,8 +122,12 @@ final List<Movie> initialMovies = [
     genres: ['Бойовик', 'Кримінал', 'Трилер'],
     actors: ['Keanu Reeves', 'Ian McShane'],
     description:
-        'Динамічний бойовик про найманця, який повертається до небезпечного світу. Підійде тим, хто шукає екшн і стильну постановку.',
-    accent: const Color(0xFF374151),
+        'Стильний екшн про найманця, який повертається у небезпечний кримінальний світ.',
+    source: 'FastAPI demo',
+    palette: [Color(0xFF020617), Color(0xFF374151), Color(0xFF94A3B8)],
+    tagline: 'No rules. No mercy.',
+    maturity: '18+',
+    runtime: '1h 41m',
   ),
   Movie(
     id: 5,
@@ -103,8 +136,12 @@ final List<Movie> initialMovies = [
     genres: ['Фантастика', 'Пригоди', 'Комедія'],
     actors: ['Matt Damon', 'Jessica Chastain'],
     description:
-        'Астронавт намагається вижити на Марсі, використовуючи науку та винахідливість. Гарний варіант для любителів оптимістичної фантастики.',
-    accent: const Color(0xFFB45309),
+        'Астронавт виживає на Марсі завдяки науці, гумору та винахідливості.',
+    source: 'PostgreSQL demo',
+    palette: [Color(0xFF431407), Color(0xFFB45309), Color(0xFFFBBF24)],
+    tagline: 'Bring him home.',
+    maturity: '12+',
+    runtime: '2h 24m',
   ),
   Movie(
     id: 6,
@@ -113,8 +150,26 @@ final List<Movie> initialMovies = [
     genres: ['Marvel', 'Пригоди', 'Фантастика'],
     actors: ['Tom Holland', 'Zendaya'],
     description:
-        'Супергеройська історія про вибір, відповідальність і мультивсесвіт. Підходить фанатам Marvel та пригодницьких фільмів.',
-    accent: const Color(0xFFBE123C),
+        'Супергеройська історія про мультивсесвіт, відповідальність і наслідки рішень.',
+    source: 'FastAPI demo',
+    palette: [Color(0xFF450A0A), Color(0xFFBE123C), Color(0xFF2563EB)],
+    tagline: 'The multiverse opens.',
+    maturity: '12+',
+    runtime: '2h 28m',
+  ),
+  Movie(
+    id: 7,
+    title: 'Dune',
+    year: 2021,
+    genres: ['Фантастика', 'Драма', 'Пригоди'],
+    actors: ['Timothee Chalamet', 'Zendaya'],
+    description:
+        'Політична, масштабна та візуально сильна фантастика про пустельну планету Арракіс.',
+    source: 'PostgreSQL demo',
+    palette: [Color(0xFF1C1917), Color(0xFF854D0E), Color(0xFFFACC15)],
+    tagline: 'Fear is the mind-killer.',
+    maturity: '12+',
+    runtime: '2h 35m',
   ),
 ];
 
@@ -126,26 +181,27 @@ class CineMindRoot extends StatefulWidget {
 }
 
 class _CineMindRootState extends State<CineMindRoot> {
-  bool isSignedIn = false;
+  bool signedIn = false;
   bool preferencesReady = false;
   String userName = 'Іван';
-  final Set<String> preferences = {'Фантастика', 'Marvel'};
-  final Set<int> favorites = {};
-  final Map<int, int> ratings = {};
-  final List<Movie> movies = List<Movie>.from(initialMovies);
+  final movies = List<Movie>.from(moviesSeed);
+  final preferences = <String>{'Фантастика', 'Marvel'};
+  final favorites = <int>{};
+  final watched = <int>{};
+  final ratings = <int, int>{};
 
   void signIn(String name) {
     setState(() {
       userName = name.trim().isEmpty ? 'Користувач' : name.trim();
-      isSignedIn = true;
+      signedIn = true;
     });
   }
 
-  void savePreferences(Set<String> selected) {
+  void savePreferences(Set<String> value) {
     setState(() {
       preferences
         ..clear()
-        ..addAll(selected);
+        ..addAll(value);
       preferencesReady = true;
     });
   }
@@ -158,8 +214,19 @@ class _CineMindRootState extends State<CineMindRoot> {
     });
   }
 
-  void rateMovie(Movie movie, int rating) {
-    setState(() => ratings[movie.id] = rating);
+  void toggleWatched(Movie movie) {
+    setState(() {
+      watched.contains(movie.id)
+          ? watched.remove(movie.id)
+          : watched.add(movie.id);
+    });
+  }
+
+  void rate(Movie movie, int value) {
+    setState(() {
+      ratings[movie.id] = value;
+      watched.add(movie.id);
+    });
   }
 
   void addMovie(Movie movie) {
@@ -170,31 +237,32 @@ class _CineMindRootState extends State<CineMindRoot> {
     setState(() {
       movies.removeWhere((item) => item.id == movie.id);
       favorites.remove(movie.id);
+      watched.remove(movie.id);
       ratings.remove(movie.id);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!isSignedIn) {
+    if (!signedIn) {
       return AuthScreen(onSignIn: signIn);
     }
-
     if (!preferencesReady) {
       return PreferencesScreen(
         initialSelection: preferences,
         onSave: savePreferences,
       );
     }
-
-    return MainShell(
+    return AppShell(
       userName: userName,
-      preferences: preferences,
       movies: movies,
+      preferences: preferences,
       favorites: favorites,
+      watched: watched,
       ratings: ratings,
       onToggleFavorite: toggleFavorite,
-      onRate: rateMovie,
+      onToggleWatched: toggleWatched,
+      onRate: rate,
       onAddMovie: addMovie,
       onDeleteMovie: deleteMovie,
       onEditPreferences: () => setState(() => preferencesReady = false),
@@ -214,7 +282,7 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final nameController = TextEditingController(text: 'Іван');
   final emailController = TextEditingController(text: 'ivan@example.com');
-  bool registerMode = true;
+  bool register = true;
 
   @override
   void dispose() {
@@ -226,33 +294,35 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF260307), Color(0xFF08090D)],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    Icons.movie_filter_rounded,
-                    size: 70,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(height: 16),
+                  const CineMindLogo(),
+                  const SizedBox(height: 28),
                   Text(
-                    'CineMind',
+                    'Movie AI для твого вечора',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w800,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Персональні рекомендації фільмів за твоїми смаками',
+                    'Flutter + FastAPI + PostgreSQL + Content-Based Filtering',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: TextStyle(color: Colors.white.withValues(alpha: .7)),
                   ),
                   const SizedBox(height: 28),
                   SegmentedButton<bool>(
@@ -268,12 +338,11 @@ class _AuthScreenState extends State<AuthScreen> {
                         icon: Icon(Icons.login),
                       ),
                     ],
-                    selected: {registerMode},
-                    onSelectionChanged: (value) {
-                      setState(() => registerMode = value.first);
-                    },
+                    selected: {register},
+                    onSelectionChanged: (value) =>
+                        setState(() => register = value.first),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   TextField(
                     controller: nameController,
                     decoration: const InputDecoration(
@@ -284,7 +353,6 @@ class _AuthScreenState extends State<AuthScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
                       labelText: 'Email',
                       prefixIcon: Icon(Icons.mail_outline),
@@ -293,8 +361,8 @@ class _AuthScreenState extends State<AuthScreen> {
                   const SizedBox(height: 16),
                   FilledButton.icon(
                     onPressed: () => widget.onSignIn(nameController.text),
-                    icon: Icon(registerMode ? Icons.check : Icons.login),
-                    label: Text(registerMode ? 'Створити профіль' : 'Увійти'),
+                    icon: const Icon(Icons.play_arrow_rounded),
+                    label: Text(register ? 'Створити профіль' : 'Увійти'),
                   ),
                 ],
               ),
@@ -302,6 +370,46 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class CineMindLogo extends StatelessWidget {
+  const CineMindLogo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 78,
+          height: 78,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE50914),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x99E50914),
+                blurRadius: 36,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.local_movies_rounded,
+            size: 42,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          'CineMind',
+          style: Theme.of(context).textTheme.displaySmall?.copyWith(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -321,8 +429,8 @@ class PreferencesScreen extends StatefulWidget {
 }
 
 class _PreferencesScreenState extends State<PreferencesScreen> {
-  late final Set<String> selected = Set<String>.from(widget.initialSelection);
-  final genres = [
+  late final selected = Set<String>.from(widget.initialSelection);
+  final genres = const [
     'Фантастика',
     'Бойовик',
     'Marvel',
@@ -337,64 +445,58 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Вподобання')),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            Text(
-              'Обери жанри та теми',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'CineMind використає ці дані, щоб сформувати персональні рекомендації.',
-            ),
-            const SizedBox(height: 20),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                for (final genre in genres)
-                  FilterChip(
-                    selected: selected.contains(genre),
-                    label: Text(genre),
-                    avatar: Icon(_genreIcon(genre), size: 18),
-                    onSelected: (isSelected) {
-                      setState(() {
-                        isSelected
-                            ? selected.add(genre)
-                            : selected.remove(genre);
-                      });
-                    },
-                  ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: selected.isEmpty
-                  ? null
-                  : () => widget.onSave(selected),
-              icon: const Icon(Icons.auto_awesome),
-              label: const Text('Показати рекомендації'),
-            ),
-          ],
-        ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text(
+            'Що тобі подобається?',
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 8),
+          const Text('CineMind використає жанри для Content-Based Filtering.'),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              for (final genre in genres)
+                FilterChip(
+                  selected: selected.contains(genre),
+                  label: Text(genre),
+                  avatar: Icon(_genreIcon(genre), size: 18),
+                  onSelected: (value) {
+                    setState(() {
+                      value ? selected.add(genre) : selected.remove(genre);
+                    });
+                  },
+                ),
+            ],
+          ),
+          const SizedBox(height: 26),
+          FilledButton.icon(
+            onPressed: selected.isEmpty ? null : () => widget.onSave(selected),
+            icon: const Icon(Icons.auto_awesome),
+            label: const Text('Увімкнути рекомендації'),
+          ),
+        ],
       ),
     );
   }
 }
 
-class MainShell extends StatefulWidget {
-  const MainShell({
+class AppShell extends StatefulWidget {
+  const AppShell({
     super.key,
     required this.userName,
-    required this.preferences,
     required this.movies,
+    required this.preferences,
     required this.favorites,
+    required this.watched,
     required this.ratings,
     required this.onToggleFavorite,
+    required this.onToggleWatched,
     required this.onRate,
     required this.onAddMovie,
     required this.onDeleteMovie,
@@ -402,21 +504,23 @@ class MainShell extends StatefulWidget {
   });
 
   final String userName;
-  final Set<String> preferences;
   final List<Movie> movies;
+  final Set<String> preferences;
   final Set<int> favorites;
+  final Set<int> watched;
   final Map<int, int> ratings;
   final ValueChanged<Movie> onToggleFavorite;
-  final void Function(Movie movie, int rating) onRate;
+  final ValueChanged<Movie> onToggleWatched;
+  final void Function(Movie movie, int value) onRate;
   final ValueChanged<Movie> onAddMovie;
   final ValueChanged<Movie> onDeleteMovie;
   final VoidCallback onEditPreferences;
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  State<AppShell> createState() => _AppShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _AppShellState extends State<AppShell> {
   int index = 0;
 
   @override
@@ -424,24 +528,40 @@ class _MainShellState extends State<MainShell> {
     final pages = [
       HomeScreen(
         userName: widget.userName,
-        preferences: widget.preferences,
         movies: widget.movies,
+        preferences: widget.preferences,
         favorites: widget.favorites,
+        watched: widget.watched,
         ratings: widget.ratings,
         onToggleFavorite: widget.onToggleFavorite,
+        onToggleWatched: widget.onToggleWatched,
         onRate: widget.onRate,
+      ),
+      SearchScreen(
+        movies: widget.movies,
+        preferences: widget.preferences,
+        favorites: widget.favorites,
+        watched: widget.watched,
+        ratings: widget.ratings,
+        onToggleFavorite: widget.onToggleFavorite,
+        onToggleWatched: widget.onToggleWatched,
+        onRate: widget.onRate,
+      ),
+      AiScreen(
+        movies: widget.movies,
+        preferences: widget.preferences,
+        watched: widget.watched,
+        ratings: widget.ratings,
+      ),
+      ProfileScreen(
+        userName: widget.userName,
+        movies: widget.movies,
+        preferences: widget.preferences,
+        favorites: widget.favorites,
+        watched: widget.watched,
+        ratings: widget.ratings,
         onEditPreferences: widget.onEditPreferences,
       ),
-      FavoritesScreen(
-        movies: widget.movies
-            .where((movie) => widget.favorites.contains(movie.id))
-            .toList(),
-        favorites: widget.favorites,
-        ratings: widget.ratings,
-        onToggleFavorite: widget.onToggleFavorite,
-        onRate: widget.onRate,
-      ),
-      AiAssistantScreen(preferences: widget.preferences, movies: widget.movies),
       AdminScreen(
         movies: widget.movies,
         onAddMovie: widget.onAddMovie,
@@ -452,24 +572,17 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       body: pages[index],
       bottomNavigationBar: NavigationBar(
+        backgroundColor: const Color(0xFF0D0F14),
         selectedIndex: index,
         onDestinationSelected: (value) => setState(() => index = value),
         destinations: const [
+          NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.search), label: 'Search'),
+          NavigationDestination(icon: Icon(Icons.auto_awesome), label: 'AI'),
+          NavigationDestination(icon: Icon(Icons.person), label: 'Profile'),
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            label: 'Головна',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.favorite_border),
-            label: 'Обране',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.smart_toy_outlined),
-            label: 'AI',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.admin_panel_settings),
-            label: 'Адмін',
+            icon: Icon(Icons.dashboard_customize),
+            label: 'Admin',
           ),
         ],
       ),
@@ -481,81 +594,90 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({
     super.key,
     required this.userName,
-    required this.preferences,
     required this.movies,
+    required this.preferences,
     required this.favorites,
+    required this.watched,
     required this.ratings,
     required this.onToggleFavorite,
+    required this.onToggleWatched,
     required this.onRate,
-    required this.onEditPreferences,
   });
 
   final String userName;
-  final Set<String> preferences;
   final List<Movie> movies;
+  final Set<String> preferences;
   final Set<int> favorites;
+  final Set<int> watched;
   final Map<int, int> ratings;
   final ValueChanged<Movie> onToggleFavorite;
-  final void Function(Movie movie, int rating) onRate;
-  final VoidCallback onEditPreferences;
+  final ValueChanged<Movie> onToggleWatched;
+  final void Function(Movie movie, int value) onRate;
 
   @override
   Widget build(BuildContext context) {
-    final recommended = movies.where((movie) {
-      return movie.genres.any(preferences.contains);
-    }).toList();
-    final popular = movies.where((movie) => movie.year >= 2015).toList();
+    final hero = _ranked(movies, preferences, ratings, watched).first;
+    final recommended = _ranked(movies, preferences, ratings, watched);
+    final marvel = movies
+        .where((movie) => movie.genres.contains('Marvel'))
+        .toList();
+    final sciFi = movies
+        .where((movie) => movie.genres.contains('Фантастика'))
+        .toList();
+    final fresh = movies.where((movie) => movie.year >= 2018).toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('CineMind'),
-        actions: [
-          IconButton(
-            tooltip: 'Змінити вподобання',
-            onPressed: onEditPreferences,
-            icon: const Icon(Icons.tune),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _HeroPanel(userName: userName, preferences: preferences),
-          const SizedBox(height: 20),
-          _SectionTitle(
-            title: 'Персональні рекомендації',
-            subtitle: 'Підібрано за твоїми жанрами та темами',
-          ),
-          const SizedBox(height: 10),
-          for (final movie in recommended)
-            MovieCard(
-              movie: movie,
-              isFavorite: favorites.contains(movie.id),
-              rating: ratings[movie.id],
-              onToggleFavorite: () => onToggleFavorite(movie),
-              onOpen: () => _openDetails(context, movie),
-            ),
-          const SizedBox(height: 14),
-          _SectionTitle(
-            title: 'Добірка тижня',
-            subtitle: 'Фільми, які легко порадити більшості глядачів',
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 180,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: popular.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                final movie = popular[index];
-                return MiniMovieTile(
-                  movie: movie,
-                  onTap: () => _openDetails(context, movie),
-                );
-              },
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: HeroBanner(
+              userName: userName,
+              movie: hero,
+              score: recommendationScore(hero, preferences, ratings, watched),
+              onOpen: () => _openDetails(context, hero),
             ),
           ),
+          SliverToBoxAdapter(
+            child: PosterRail(
+              title: 'Top picks for you',
+              movies: recommended,
+              preferences: preferences,
+              watched: watched,
+              ratings: ratings,
+              onOpen: (movie) => _openDetails(context, movie),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: PosterRail(
+              title: 'Marvel universe',
+              movies: marvel,
+              preferences: preferences,
+              watched: watched,
+              ratings: ratings,
+              onOpen: (movie) => _openDetails(context, movie),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: PosterRail(
+              title: 'Sci-fi mood',
+              movies: sciFi,
+              preferences: preferences,
+              watched: watched,
+              ratings: ratings,
+              onOpen: (movie) => _openDetails(context, movie),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: PosterRail(
+              title: 'Newer titles',
+              movies: fresh,
+              preferences: preferences,
+              watched: watched,
+              ratings: ratings,
+              onOpen: (movie) => _openDetails(context, movie),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 20)),
         ],
       ),
     );
@@ -567,98 +689,708 @@ class HomeScreen extends StatelessWidget {
         builder: (_) => MovieDetailsScreen(
           movie: movie,
           isFavorite: favorites.contains(movie.id),
+          isWatched: watched.contains(movie.id),
           rating: ratings[movie.id],
           onToggleFavorite: () => onToggleFavorite(movie),
-          onRate: (rating) => onRate(movie, rating),
+          onToggleWatched: () => onToggleWatched(movie),
+          onRate: (value) => onRate(movie, value),
         ),
       ),
     );
   }
 }
 
-class FavoritesScreen extends StatelessWidget {
-  const FavoritesScreen({
+class HeroBanner extends StatelessWidget {
+  const HeroBanner({
     super.key,
-    required this.movies,
-    required this.favorites,
-    required this.ratings,
-    required this.onToggleFavorite,
-    required this.onRate,
+    required this.userName,
+    required this.movie,
+    required this.score,
+    required this.onOpen,
   });
 
-  final List<Movie> movies;
-  final Set<int> favorites;
-  final Map<int, int> ratings;
-  final ValueChanged<Movie> onToggleFavorite;
-  final void Function(Movie movie, int rating) onRate;
+  final String userName;
+  final Movie movie;
+  final int score;
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Обране')),
-      body: movies.isEmpty
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'Тут з’являться фільми, які ти додаси до обраного.',
-                  textAlign: TextAlign.center,
+    return Container(
+      height: 510,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            movie.palette.first,
+            movie.palette[1],
+            const Color(0xFF08090D),
+          ],
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 26),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    'CineMind',
+                    style: TextStyle(
+                      color: Color(0xFFE50914),
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const Spacer(),
+                  CircleAvatar(
+                    backgroundColor: Colors.white.withValues(alpha: .14),
+                    child: Text(userName.characters.first.toUpperCase()),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Center(
+                child: Hero(
+                  tag: 'poster-${movie.id}',
+                  child: PosterArtwork(movie: movie, width: 210, height: 285),
                 ),
               ),
-            )
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                for (final movie in movies)
-                  MovieCard(
-                    movie: movie,
-                    isFavorite: favorites.contains(movie.id),
-                    rating: ratings[movie.id],
-                    onToggleFavorite: () => onToggleFavorite(movie),
-                    onOpen: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => MovieDetailsScreen(
-                            movie: movie,
-                            isFavorite: favorites.contains(movie.id),
-                            rating: ratings[movie.id],
-                            onToggleFavorite: () => onToggleFavorite(movie),
-                            onRate: (rating) => onRate(movie, rating),
-                          ),
-                        ),
-                      );
-                    },
+              const SizedBox(height: 18),
+              Text(
+                movie.title,
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '${movie.year} • ${movie.maturity} • ${movie.runtime} • Match $score%',
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  FilledButton.icon(
+                    onPressed: onOpen,
+                    icon: const Icon(Icons.play_arrow_rounded),
+                    label: const Text('Дивитись'),
                   ),
-              ],
-            ),
+                  const SizedBox(width: 10),
+                  OutlinedButton.icon(
+                    onPressed: onOpen,
+                    icon: const Icon(Icons.info_outline),
+                    label: const Text('Деталі'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
 
-class AiAssistantScreen extends StatefulWidget {
-  const AiAssistantScreen({
+class PosterRail extends StatelessWidget {
+  const PosterRail({
     super.key,
-    required this.preferences,
+    required this.title,
     required this.movies,
+    required this.preferences,
+    required this.watched,
+    required this.ratings,
+    required this.onOpen,
   });
 
-  final Set<String> preferences;
+  final String title;
   final List<Movie> movies;
+  final Set<String> preferences;
+  final Set<int> watched;
+  final Map<int, int> ratings;
+  final ValueChanged<Movie> onOpen;
 
   @override
-  State<AiAssistantScreen> createState() => _AiAssistantScreenState();
+  Widget build(BuildContext context) {
+    if (movies.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 238,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              scrollDirection: Axis.horizontal,
+              itemCount: movies.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 14),
+              itemBuilder: (context, index) {
+                final movie = movies[index];
+                return PosterTile(
+                  movie: movie,
+                  score: recommendationScore(
+                    movie,
+                    preferences,
+                    ratings,
+                    watched,
+                  ),
+                  onTap: () => onOpen(movie),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _AiAssistantScreenState extends State<AiAssistantScreen> {
-  final questionController = TextEditingController(
-    text: 'Порадь фільм на вечір',
-  );
-  String answer =
-      'Запитай мене про фільм, жанр або настрій, і я сформую рекомендацію.';
+class PosterTile extends StatefulWidget {
+  const PosterTile({
+    super.key,
+    required this.movie,
+    required this.score,
+    required this.onTap,
+  });
+
+  final Movie movie;
+  final int score;
+  final VoidCallback onTap;
+
+  @override
+  State<PosterTile> createState() => _PosterTileState();
+}
+
+class _PosterTileState extends State<PosterTile> {
+  bool pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => pressed = true),
+      onTapCancel: () => setState(() => pressed = false),
+      onTapUp: (_) => setState(() => pressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 150),
+        scale: pressed ? .96 : 1,
+        child: SizedBox(
+          width: 142,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Hero(
+                tag: 'poster-${widget.movie.id}',
+                child: PosterArtwork(
+                  movie: widget.movie,
+                  width: 142,
+                  height: 188,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                widget.movie.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                '${widget.score}% match',
+                style: const TextStyle(color: Color(0xFF22C55E), fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class PosterArtwork extends StatelessWidget {
+  const PosterArtwork({
+    super.key,
+    required this.movie,
+    required this.width,
+    required this.height,
+  });
+
+  final Movie movie;
+  final double width;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: movie.palette[1].withValues(alpha: .45),
+              blurRadius: 24,
+              offset: const Offset(0, 12),
+            ),
+          ],
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: movie.palette,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            Positioned(
+              right: -26,
+              top: -18,
+              child: Icon(
+                Icons.blur_on,
+                color: Colors.white.withValues(alpha: .16),
+                size: width * .85,
+              ),
+            ),
+            Positioned(
+              left: 14,
+              top: 14,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: .45),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  movie.maturity,
+                  style: const TextStyle(fontSize: 11),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 14,
+              right: 14,
+              bottom: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    movie.title.toUpperCase(),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: max(18, width * .13),
+                      fontWeight: FontWeight.w900,
+                      height: .95,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    movie.tagline,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: .78),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SearchScreen extends StatefulWidget {
+  const SearchScreen({
+    super.key,
+    required this.movies,
+    required this.preferences,
+    required this.favorites,
+    required this.watched,
+    required this.ratings,
+    required this.onToggleFavorite,
+    required this.onToggleWatched,
+    required this.onRate,
+  });
+
+  final List<Movie> movies;
+  final Set<String> preferences;
+  final Set<int> favorites;
+  final Set<int> watched;
+  final Map<int, int> ratings;
+  final ValueChanged<Movie> onToggleFavorite;
+  final ValueChanged<Movie> onToggleWatched;
+  final void Function(Movie movie, int value) onRate;
+
+  @override
+  State<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+  final controller = TextEditingController();
+  String genre = 'Усі';
 
   @override
   void dispose() {
-    questionController.dispose();
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final genres = [
+      'Усі',
+      ...{for (final movie in widget.movies) ...movie.genres},
+    ];
+    final query = controller.text.trim().toLowerCase();
+    final filtered = widget.movies.where((movie) {
+      final text =
+          '${movie.title} ${movie.genres.join(' ')} ${movie.actors.join(' ')}'
+              .toLowerCase();
+      return (query.isEmpty || text.contains(query)) &&
+          (genre == 'Усі' || movie.genres.contains(genre));
+    }).toList();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Пошук')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          TextField(
+            controller: controller,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              labelText: 'Назва, жанр або актор',
+              prefixIcon: Icon(Icons.search),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final item in genres)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(item),
+                      selected: genre == item,
+                      onSelected: (_) => setState(() => genre = item),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          for (final movie in filtered)
+            MovieListCard(
+              movie: movie,
+              isFavorite: widget.favorites.contains(movie.id),
+              isWatched: widget.watched.contains(movie.id),
+              rating: widget.ratings[movie.id],
+              score: recommendationScore(
+                movie,
+                widget.preferences,
+                widget.ratings,
+                widget.watched,
+              ),
+              onOpen: () => _openDetails(context, movie),
+              onToggleFavorite: () => widget.onToggleFavorite(movie),
+              onToggleWatched: () => widget.onToggleWatched(movie),
+            ),
+          if (filtered.isEmpty)
+            const EmptyState(
+              icon: Icons.search_off,
+              title: 'Нічого не знайдено',
+              text: 'Спробуй інший запит або жанр.',
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _openDetails(BuildContext context, Movie movie) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MovieDetailsScreen(
+          movie: movie,
+          isFavorite: widget.favorites.contains(movie.id),
+          isWatched: widget.watched.contains(movie.id),
+          rating: widget.ratings[movie.id],
+          onToggleFavorite: () => widget.onToggleFavorite(movie),
+          onToggleWatched: () => widget.onToggleWatched(movie),
+          onRate: (value) => widget.onRate(movie, value),
+        ),
+      ),
+    );
+  }
+}
+
+class MovieListCard extends StatelessWidget {
+  const MovieListCard({
+    super.key,
+    required this.movie,
+    required this.isFavorite,
+    required this.isWatched,
+    required this.rating,
+    required this.score,
+    required this.onOpen,
+    required this.onToggleFavorite,
+    required this.onToggleWatched,
+  });
+
+  final Movie movie;
+  final bool isFavorite;
+  final bool isWatched;
+  final int? rating;
+  final int score;
+  final VoidCallback onOpen;
+  final VoidCallback onToggleFavorite;
+  final VoidCallback onToggleWatched;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onOpen,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              PosterArtwork(movie: movie, width: 76, height: 106),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      movie.title,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 4),
+                    Text('${movie.year} • ${movie.genres.join(', ')}'),
+                    const SizedBox(height: 6),
+                    Text(
+                      '$score% match • ${rating == null ? 'не оцінено' : '$rating/5'}',
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                children: [
+                  IconButton(
+                    onPressed: onToggleFavorite,
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: onToggleWatched,
+                    icon: Icon(
+                      isWatched ? Icons.visibility : Icons.visibility_outlined,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class MovieDetailsScreen extends StatelessWidget {
+  const MovieDetailsScreen({
+    super.key,
+    required this.movie,
+    required this.isFavorite,
+    required this.isWatched,
+    required this.rating,
+    required this.onToggleFavorite,
+    required this.onToggleWatched,
+    required this.onRate,
+  });
+
+  final Movie movie;
+  final bool isFavorite;
+  final bool isWatched;
+  final int? rating;
+  final VoidCallback onToggleFavorite;
+  final VoidCallback onToggleWatched;
+  final ValueChanged<int> onRate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            expandedHeight: 430,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [movie.palette[1], const Color(0xFF08090D)],
+                  ),
+                ),
+                child: SafeArea(
+                  child: Center(
+                    child: Hero(
+                      tag: 'poster-${movie.id}',
+                      child: PosterArtwork(
+                        movie: movie,
+                        width: 230,
+                        height: 320,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    movie.title,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${movie.year} • ${movie.maturity} • ${movie.runtime} • ${movie.source}',
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: onToggleFavorite,
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                          ),
+                          label: Text(isFavorite ? 'В обраному' : 'Обране'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: onToggleWatched,
+                          icon: Icon(
+                            isWatched
+                                ? Icons.visibility
+                                : Icons.visibility_outlined,
+                          ),
+                          label: Text(isWatched ? 'Переглянуто' : 'Перегляд'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Text(movie.description),
+                  const SizedBox(height: 18),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final genre in movie.genres)
+                        Chip(label: Text(genre)),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Text('Актори', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final actor in movie.actors)
+                        Chip(label: Text(actor)),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'Оцінка користувача',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  Row(
+                    children: [
+                      for (var value = 1; value <= 5; value++)
+                        IconButton(
+                          onPressed: () => onRate(value),
+                          icon: Icon(
+                            value <= (rating ?? 0)
+                                ? Icons.star
+                                : Icons.star_border,
+                            color: const Color(0xFFFACC15),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AiScreen extends StatefulWidget {
+  const AiScreen({
+    super.key,
+    required this.movies,
+    required this.preferences,
+    required this.watched,
+    required this.ratings,
+  });
+
+  final List<Movie> movies;
+  final Set<String> preferences;
+  final Set<int> watched;
+  final Map<int, int> ratings;
+
+  @override
+  State<AiScreen> createState() => _AiScreenState();
+}
+
+class _AiScreenState extends State<AiScreen> {
+  final controller = TextEditingController(text: 'Що подивитися після Marvel?');
+  String answer = 'AI-помічник готовий сформувати добірку.';
+
+  @override
+  void dispose() {
+    controller.dispose();
     super.dispose();
   }
 
@@ -676,25 +1408,21 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Питання до CineMind AI',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                    'GPT-4o Mini / Gemini 2.5 Flash',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
                   TextField(
-                    controller: questionController,
+                    controller: controller,
                     minLines: 2,
                     maxLines: 4,
-                    decoration: const InputDecoration(
-                      hintText: 'Наприклад: що подивитися після Marvel?',
-                    ),
+                    decoration: const InputDecoration(labelText: 'Питання'),
                   ),
                   const SizedBox(height: 12),
                   FilledButton.icon(
-                    onPressed: _generateAnswer,
+                    onPressed: _answer,
                     icon: const Icon(Icons.auto_awesome),
-                    label: const Text('Отримати відповідь'),
+                    label: const Text('Згенерувати рекомендацію'),
                   ),
                 ],
               ),
@@ -704,36 +1432,189 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.smart_toy_outlined),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text(answer)),
-                ],
-              ),
+              child: Text(answer),
             ),
           ),
+          const TechStackCard(),
         ],
       ),
     );
   }
 
-  void _generateAnswer() {
-    final query = questionController.text.toLowerCase();
-    final matched = widget.movies.where((movie) {
-      final text = '${movie.title} ${movie.genres.join(' ')}'.toLowerCase();
-      return movie.genres.any(widget.preferences.contains) ||
-          query
-              .split(' ')
-              .any((word) => word.length > 3 && text.contains(word));
-    }).toList();
-    final movie = matched.isEmpty ? widget.movies.first : matched.first;
+  void _answer() {
+    final ranked = _ranked(
+      widget.movies,
+      widget.preferences,
+      widget.ratings,
+      widget.watched,
+    );
+    final top = ranked.take(3).map((movie) => movie.title).join(', ');
     setState(() {
       answer =
-          'Рекомендую "${movie.title}" (${movie.year}). Він підходить, бо має жанри: ${movie.genres.join(', ')}. '
-          'У повній версії AI-сервіс аналізував би твої оцінки, обране, переглянуті фільми та дані з API.';
+          'Рекомендована добірка: $top. Алгоритм Content-Based Filtering врахував жанри, рік, оцінки, обране та переглянуті фільми.';
     });
+  }
+}
+
+class TechStackCard extends StatelessWidget {
+  const TechStackCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'Технології',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            ),
+            SizedBox(height: 10),
+            Text('Flutter • Dart • Python • FastAPI • PostgreSQL'),
+            SizedBox(height: 6),
+            Text('Content-Based Filtering • GPT-4o Mini • Gemini 2.5 Flash'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({
+    super.key,
+    required this.userName,
+    required this.movies,
+    required this.preferences,
+    required this.favorites,
+    required this.watched,
+    required this.ratings,
+    required this.onEditPreferences,
+  });
+
+  final String userName;
+  final List<Movie> movies;
+  final Set<String> preferences;
+  final Set<int> favorites;
+  final Set<int> watched;
+  final Map<int, int> ratings;
+  final VoidCallback onEditPreferences;
+
+  @override
+  Widget build(BuildContext context) {
+    final avg = ratings.isEmpty
+        ? 0
+        : ratings.values.reduce((a, b) => a + b) / ratings.length;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Профіль')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: const Color(0xFFE50914),
+                    child: Text(userName.characters.first.toUpperCase()),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userName,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        Text(preferences.join(' • ')),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 1.45,
+            children: [
+              StatCard(
+                title: 'Обране',
+                value: '${favorites.length}',
+                icon: Icons.favorite,
+              ),
+              StatCard(
+                title: 'Переглянуто',
+                value: '${watched.length}',
+                icon: Icons.visibility,
+              ),
+              StatCard(
+                title: 'Оцінено',
+                value: '${ratings.length}',
+                icon: Icons.star,
+              ),
+              StatCard(
+                title: 'Середня',
+                value: avg.toStringAsFixed(1),
+                icon: Icons.analytics,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: onEditPreferences,
+            icon: const Icon(Icons.tune),
+            label: const Text('Редагувати вподобання'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class StatCard extends StatelessWidget {
+  const StatCard({
+    super.key,
+    required this.title,
+    required this.value,
+    required this.icon,
+  });
+
+  final String title;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: const Color(0xFFE50914)),
+            const Spacer(),
+            Text(
+              value,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+            ),
+            Text(title),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -754,22 +1635,22 @@ class AdminScreen extends StatefulWidget {
 }
 
 class _AdminScreenState extends State<AdminScreen> {
-  final titleController = TextEditingController();
-  final yearController = TextEditingController();
-  final genreController = TextEditingController();
+  final title = TextEditingController();
+  final year = TextEditingController();
+  final genres = TextEditingController();
 
   @override
   void dispose() {
-    titleController.dispose();
-    yearController.dispose();
-    genreController.dispose();
+    title.dispose();
+    year.dispose();
+    genres.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Адмін-панель')),
+      appBar: AppBar(title: const Text('Admin')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -777,35 +1658,26 @@ class _AdminScreenState extends State<AdminScreen> {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'Додати фільм до каталогу',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   TextField(
-                    controller: titleController,
+                    controller: title,
                     decoration: const InputDecoration(labelText: 'Назва'),
                   ),
                   const SizedBox(height: 10),
                   TextField(
-                    controller: yearController,
-                    keyboardType: TextInputType.number,
+                    controller: year,
                     decoration: const InputDecoration(labelText: 'Рік'),
                   ),
                   const SizedBox(height: 10),
                   TextField(
-                    controller: genreController,
+                    controller: genres,
                     decoration: const InputDecoration(
                       labelText: 'Жанри через кому',
                     ),
                   ),
                   const SizedBox(height: 12),
                   FilledButton.icon(
-                    onPressed: _addMovie,
+                    onPressed: _add,
                     icon: const Icon(Icons.add),
                     label: const Text('Додати'),
                   ),
@@ -813,377 +1685,114 @@ class _AdminScreenState extends State<AdminScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Каталог фільмів',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 14),
           for (final movie in widget.movies)
-            Card(
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: movie.accent,
-                  child: const Icon(Icons.movie, color: Colors.white),
-                ),
-                title: Text(movie.title),
-                subtitle: Text('${movie.year} • ${movie.genres.join(', ')}'),
-                trailing: IconButton(
-                  tooltip: 'Видалити',
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => widget.onDeleteMovie(movie),
-                ),
-              ),
+            MovieListCard(
+              movie: movie,
+              isFavorite: false,
+              isWatched: false,
+              rating: null,
+              score: 0,
+              onOpen: () {},
+              onToggleFavorite: () {},
+              onToggleWatched: () => widget.onDeleteMovie(movie),
             ),
         ],
       ),
     );
   }
 
-  void _addMovie() {
-    final title = titleController.text.trim();
-    final year = int.tryParse(yearController.text.trim()) ?? 2026;
-    final genres = genreController.text
+  void _add() {
+    final movieTitle = title.text.trim();
+    final movieGenres = genres.text
         .split(',')
-        .map((genre) => genre.trim())
-        .where((genre) => genre.isNotEmpty)
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
         .toList();
-
-    if (title.isEmpty || genres.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Заповни назву та хоча б один жанр.')),
-      );
-      return;
-    }
-
+    if (movieTitle.isEmpty || movieGenres.isEmpty) return;
     widget.onAddMovie(
       Movie(
         id: DateTime.now().millisecondsSinceEpoch,
-        title: title,
-        year: year,
-        genres: genres,
-        actors: const ['Невідомо'],
-        description:
-            'Новий фільм у каталозі CineMind. У майбутній версії адміністратор зможе додавати постер, опис, акторів та посилання на API.',
-        accent: const Color(0xFF0E7C7B),
+        title: movieTitle,
+        year: int.tryParse(year.text.trim()) ?? 2026,
+        genres: movieGenres,
+        actors: const ['Admin'],
+        description: 'Фільм додано адміністратором через Flutter-клієнт.',
+        source: 'FastAPI admin demo',
+        palette: const [
+          Color(0xFF111827),
+          Color(0xFFE50914),
+          Color(0xFFF97316),
+        ],
+        tagline: 'Added by admin.',
+        maturity: '12+',
+        runtime: '2h',
       ),
     );
-
-    titleController.clear();
-    yearController.clear();
-    genreController.clear();
+    title.clear();
+    year.clear();
+    genres.clear();
   }
 }
 
-class MovieDetailsScreen extends StatelessWidget {
-  const MovieDetailsScreen({
+class EmptyState extends StatelessWidget {
+  const EmptyState({
     super.key,
-    required this.movie,
-    required this.isFavorite,
-    required this.rating,
-    required this.onToggleFavorite,
-    required this.onRate,
+    required this.icon,
+    required this.title,
+    required this.text,
   });
 
-  final Movie movie;
-  final bool isFavorite;
-  final int? rating;
-  final VoidCallback onToggleFavorite;
-  final ValueChanged<int> onRate;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(movie.title)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Container(
-            height: 210,
-            decoration: BoxDecoration(
-              color: movie.accent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                const Icon(Icons.local_movies, color: Colors.white, size: 42),
-                const Spacer(),
-                Text(
-                  movie.title,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                Text(
-                  '${movie.year} • ${movie.genres.join(', ')}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: onToggleFavorite,
-                  icon: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                  ),
-                  label: Text(isFavorite ? 'В обраному' : 'Додати в обране'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'Опис',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          Text(movie.description),
-          const SizedBox(height: 18),
-          Text(
-            'Актори',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final actor in movie.actors) Chip(label: Text(actor)),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'Оціни фільм',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              for (var value = 1; value <= 5; value++)
-                IconButton(
-                  tooltip: '$value',
-                  onPressed: () => onRate(value),
-                  icon: Icon(
-                    value <= (rating ?? 0) ? Icons.star : Icons.star_border,
-                    color: const Color(0xFFF59E0B),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class MovieCard extends StatelessWidget {
-  const MovieCard({
-    super.key,
-    required this.movie,
-    required this.isFavorite,
-    required this.rating,
-    required this.onToggleFavorite,
-    required this.onOpen,
-  });
-
-  final Movie movie;
-  final bool isFavorite;
-  final int? rating;
-  final VoidCallback onToggleFavorite;
-  final VoidCallback onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onOpen,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Container(
-                width: 78,
-                height: 104,
-                decoration: BoxDecoration(
-                  color: movie.accent,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.movie, color: Colors.white, size: 36),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      movie.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text('${movie.year} • ${movie.genres.join(', ')}'),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.star,
-                          size: 18,
-                          color: Color(0xFFF59E0B),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(rating == null ? 'не оцінено' : '$rating / 5'),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                tooltip: isFavorite ? 'Прибрати з обраного' : 'Додати в обране',
-                onPressed: onToggleFavorite,
-                icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class MiniMovieTile extends StatelessWidget {
-  const MiniMovieTile({super.key, required this.movie, required this.onTap});
-
-  final Movie movie;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: onTap,
-      child: Container(
-        width: 150,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: movie.accent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(
-              Icons.play_circle_outline,
-              color: Colors.white,
-              size: 34,
-            ),
-            const Spacer(),
-            Text(
-              movie.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${movie.year}',
-              style: const TextStyle(color: Colors.white70),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HeroPanel extends StatelessWidget {
-  const _HeroPanel({required this.userName, required this.preferences});
-
-  final String userName;
-  final Set<String> preferences;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0E7C7B),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Привіт, $userName',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Сьогодні CineMind підбере фільми за твоїми вподобаннями.',
-            style: TextStyle(color: Colors.white),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final preference in preferences)
-                Chip(
-                  avatar: Icon(_genreIcon(preference), size: 18),
-                  label: Text(preference),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.subtitle});
-
+  final IconData icon;
   final String title;
-  final String subtitle;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
-        Text(subtitle),
-      ],
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        children: [
+          Icon(icon, size: 54, color: const Color(0xFFE50914)),
+          const SizedBox(height: 12),
+          Text(title, style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 6),
+          Text(text, textAlign: TextAlign.center),
+        ],
+      ),
     );
   }
+}
+
+List<Movie> _ranked(
+  List<Movie> movies,
+  Set<String> preferences,
+  Map<int, int> ratings,
+  Set<int> watched,
+) {
+  return [...movies]..sort(
+    (a, b) => recommendationScore(
+      b,
+      preferences,
+      ratings,
+      watched,
+    ).compareTo(recommendationScore(a, preferences, ratings, watched)),
+  );
+}
+
+int recommendationScore(
+  Movie movie,
+  Set<String> preferences,
+  Map<int, int> ratings,
+  Set<int> watched,
+) {
+  var score = 48;
+  score += movie.genres.where(preferences.contains).length * 17;
+  score += movie.year >= 2018 ? 8 : 0;
+  score += movie.source.contains('FastAPI') ? 4 : 0;
+  score += ratings[movie.id] != null ? ratings[movie.id]! * 3 : 0;
+  score -= watched.contains(movie.id) ? 10 : 0;
+  return score.clamp(0, 99);
 }
 
 IconData _genreIcon(String genre) {

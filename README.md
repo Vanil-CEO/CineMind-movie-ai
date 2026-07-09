@@ -1,48 +1,44 @@
 # CineMind Movie AI
 
-**CineMind** is a Flutter mobile app prototype for personalized movie recommendations.
+**CineMind** is a Netflix-style Flutter mobile app prototype for personalized movie recommendations.
 
-The app helps users choose films based on their preferences: favorite genres, Marvel/sci-fi/action interests, actors, watched films, favorites, and ratings. The current version is a working educational prototype with local demo data and a simulated AI assistant.
+The project uses the technology stack selected in the practice report: **Flutter**, **Dart**, **Python**, **FastAPI**, **PostgreSQL**, **Content-Based Filtering**, and an AI assistant concept based on **GPT-4o Mini** or **Gemini 2.5 Flash**.
+
+## Current App Design
+
+- Dark Netflix-inspired interface.
+- Large hero banner.
+- Poster-style movie cards.
+- Horizontal movie collections.
+- Animated poster press effects.
+- Search by title, genre, or actor.
+- Favorites, watched movies, and user ratings.
+- Content-Based Filtering match percentage.
+- AI assistant screen.
+- User profile with statistics.
+- Admin screen for catalog changes.
 
 ## Project Goal
 
 Create a convenient Android-first mobile application that helps users quickly find interesting movies and receive personal recommendations based on their own tastes.
 
-## Implemented Features
+## Technology Stack
 
-- User registration / login screen.
-- Preference selection screen.
-- Personalized movie recommendations.
-- Movie collections on the home screen.
-- Movie details page.
-- Favorites.
-- Movie rating.
-- AI assistant prototype.
-- Admin panel for managing the movie catalog.
-- Flutter tests and screenshot generation for progress reports.
-
-## Main Roles
-
-- **User**: searches movies, selects preferences, receives recommendations, adds favorites, rates movies.
-- **Administrator**: manages the movie catalog.
-- **AI / recommendation service**: analyzes user preferences and forms recommendations.
-- **API / database**: planned data source for real movie information.
+- **Frontend:** Flutter, Dart.
+- **Backend prototype:** Python, FastAPI.
+- **Database schema:** PostgreSQL.
+- **Recommendation algorithm:** Content-Based Filtering.
+- **AI assistant concept:** GPT-4o Mini / Gemini 2.5 Flash.
 
 ## Project Structure
 
-- `lib/main.dart` - main Flutter application code.
-- `test/` - widget tests and report screenshot test.
-- `docs/progress/` - daily progress log for 3 weeks.
-- `docs/reports/` - weekly report materials and screenshots.
-- `outputs/` - generated Word report.
+- `lib/main.dart` - Flutter client.
+- `backend/` - FastAPI backend prototype and PostgreSQL schema.
+- `test/` - Flutter widget tests.
+- `docs/progress/` - daily progress documentation.
+- `docs/reports/` - weekly reports and screenshots.
 
-## Weekly Progress
-
-- [3-week plan](docs/progress/three-week-plan.md)
-- [Daily progress log](docs/progress/daily-progress.md)
-- [Week 3 summary](docs/progress/week-3-summary.md)
-
-## Run Locally
+## Run Flutter App
 
 ```bash
 flutter pub get
@@ -52,7 +48,15 @@ flutter run
 For web preview:
 
 ```bash
-flutter run -d web-server --web-hostname 127.0.0.1 --web-port 5252
+flutter run -d web-server --web-hostname 127.0.0.1 --web-port 5254
+```
+
+## Run Backend Prototype
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
 ```
 
 ## Verification
@@ -62,6 +66,12 @@ flutter analyze
 flutter test
 ```
 
-## Current Status
+## Progress
 
-The project is a working Flutter prototype. The next planned improvements are persistent storage, integration with a real movie API, and replacing the local AI demo logic with an external recommendation or AI service.
+- [3-week plan](docs/progress/three-week-plan.md)
+- [Daily progress log](docs/progress/daily-progress.md)
+- [Week 3 summary](docs/progress/week-3-summary.md)
+
+## GitHub
+
+Repository: https://github.com/Vanil-CEO/CineMind-movie-ai
