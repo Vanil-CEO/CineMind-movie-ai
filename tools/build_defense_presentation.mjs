@@ -193,7 +193,7 @@ async function build() {
     pill(s, 'Flutter', 76, 266, 110, colors.blue);
     pill(s, 'FastAPI', 198, 266, 110, colors.mint);
     pill(s, 'PostgreSQL', 320, 266, 142, colors.jade);
-    pill(s, 'AI-сервіс', 474, 266, 118, colors.violet);
+    pill(s, 'Підбір', 474, 266, 118, colors.violet);
     await image(
       s,
       path.join(shots, '02_cinematic_home.png'),
@@ -221,13 +221,13 @@ async function build() {
     metric(s, '7', 'фільмів у seed-каталозі', 74, 260, 240, colors.blue);
     metric(s, '9', 'таблиць PostgreSQL', 334, 260, 240, colors.jade);
     metric(s, '7', 'FastAPI endpoint-ів', 594, 260, 240, colors.mint);
-    metric(s, 'AI', 'підбір за смаком', 854, 260, 240, colors.violet);
+    metric(s, '4', 'сигнали для підбору', 854, 260, 240, colors.violet);
     bullets(
       s,
       [
         'Переробив головний екран у темному стилі з афішами, великим банером і нижньою навігацією.',
         'Додав рейтинги, коментарі, профіль із фото, списки “обране / пізніше / переглянуто”.',
-        'Підготував backend на FastAPI та PostgreSQL-схему для збереження даних.',
+        'Підготував backend на FastAPI та PostgreSQL-схему для каталогу і дій користувача.',
       ],
       86,
       430,
@@ -248,7 +248,7 @@ async function build() {
       ['Flutter UI', 'екрани, анімації, профіль', colors.blue],
       ['FastAPI', 'REST endpoint-и', colors.mint],
       ['PostgreSQL', 'каталог і дії користувача', colors.jade],
-      ['AI-сервіс', 'підбір фільмів', colors.violet],
+      ['Підбір', 'рекомендація фільмів', colors.violet],
     ];
     nodes.forEach((node, i) => {
       const x = 80 + i * 284;
@@ -282,6 +282,51 @@ async function build() {
     addBg(s);
     title(
       s,
+      'Як підключалась база даних',
+      'PostgreSQL запускається окремим контейнером, а FastAPI підключається до нього через змінну DATABASE_URL.',
+    );
+    const steps = [
+      ['1', 'docker-compose.yml', 'описує контейнер PostgreSQL 16, порт 5432, користувача cinemind і базу cinemind'],
+      ['2', 'schema.sql', 'створює таблиці users, movies, user_ratings, movie_comments та початковий каталог фільмів'],
+      ['3', 'DATABASE_URL', 'передається у FastAPI як рядок підключення до локальної PostgreSQL-бази'],
+      ['4', 'backend/main.py', 'через psycopg відкриває з’єднання, виконує SQL-запити і повертає дані в endpoint-и'],
+    ];
+    steps.forEach((step, i) => {
+      const y = 250 + i * 86;
+      card(s, 86, y, 88, 58, { fill: '#07131F', line: colors.mint });
+      text(s, step[0], 86, y + 15, 88, 26, {
+        size: 26,
+        bold: true,
+        color: colors.mint,
+        align: 'center',
+      });
+      text(s, step[1], 202, y + 2, 250, 28, {
+        size: 22,
+        bold: true,
+        color: colors.white,
+      });
+      text(s, step[2], 202, y + 34, 860, 34, {
+        size: 17,
+        color: colors.muted,
+      });
+    });
+    await image(s, path.join(shots, '13_postgresql_interface.png'), 890, 250, 300, 250, 'contain');
+    text(
+      s,
+      'Послідовність підключення: контейнер → SQL-таблиці → рядок підключення → FastAPI endpoint-и.',
+      126,
+      620,
+      980,
+      34,
+      { size: 18, color: colors.mint, align: 'center', bold: true },
+    );
+  }
+
+  {
+    const s = deck.slides.add();
+    addBg(s);
+    title(
+      s,
       'PostgreSQL зберігає каталог і поведінку користувача',
       'База даних розділена на сутності фільмів, жанрів, акторів і користувацьких дій.',
     );
@@ -307,7 +352,7 @@ async function build() {
     title(
       s,
       'FastAPI став шаром між додатком і PostgreSQL',
-      'API приймає дії користувача, перевіряє дані через Pydantic і повертає готові відповіді для інтерфейсу.',
+      'API приймає запити з інтерфейсу, перевіряє структуру даних через Pydantic і виконує SQL-запити.',
     );
     await image(s, path.join(shots, '12_fastapi_swagger.png'), 72, 240, 548, 370, 'contain');
     const endpoints = [
@@ -337,13 +382,13 @@ async function build() {
     title(
       s,
       'Рекомендації залежать від дій користувача',
-      'Підбір фільмів враховує запит, жанрові смаки, оцінки, переглянуті фільми і коментарі.',
+      'Підбір фільмів враховує жанрові смаки, оцінки, переглянуті фільми і коментарі.',
     );
     await image(s, path.join(shots, '04_ai_agent_studio.png'), 70, 234, 520, 382, 'cover');
     await image(s, path.join(shots, '07_flutter_ai_code.png'), 626, 234, 500, 382, 'contain');
     text(
       s,
-      'Логіка підбору: збіг жанрів + оцінка користувача + врахування переглянутих фільмів + коротке пояснення вибору.',
+      'Алгоритм підбору: збіг жанрів + оцінка користувача + врахування переглянутих фільмів + коротке пояснення вибору.',
       118,
       632,
       1000,
@@ -400,18 +445,18 @@ async function build() {
     title(
       s,
       'Проєкт перевірено перед захистом',
-      'Фокус перевірки: застосунок запускається, код аналізується без issues, базові тести проходять.',
+      'Перевірка потрібна, щоб показати, що зміни не залишились тільки на рівні макета.',
     );
-    metric(s, '0', 'Flutter analyze issues', 110, 270, 260, colors.jade);
-    metric(s, '1/1', 'widget test passed', 410, 270, 260, colors.mint);
+    metric(s, '0', 'помилок аналізу Flutter', 110, 270, 260, colors.jade);
+    metric(s, '1/1', 'тест пройшов', 410, 270, 260, colors.mint);
     metric(s, 'OK', 'backend py_compile', 710, 270, 260, colors.blue);
     bullets(
       s,
       [
-        'flutter analyze: No issues found.',
-        'flutter test: All tests passed.',
-        'python -m py_compile backend/main.py: синтаксис FastAPI backend валідний.',
-        'Додатково перевірено backend-файл через Python-компіляцію.',
+        'flutter analyze перевірив Dart-код і не знайшов помилок.',
+        'flutter test запустив базовий widget-тест для стартового екрана.',
+        'python -m py_compile backend/main.py перевірив синтаксис FastAPI backend.',
+        'Окремо підготовлено скріни інтерфейсу, FastAPI Swagger UI, PostgreSQL Query Tool і VS Code.',
       ],
       116,
       440,
@@ -433,7 +478,7 @@ async function build() {
       [
         'Показати авторизацію, вибір смаків, головну стрічку й деталі фільму.',
         'Поставити оцінку, додати коментар і показати, що ці дані впливають на рекомендації.',
-        'Відкрити вкладку “Система” та пояснити Flutter → FastAPI → PostgreSQL → рекомендації.',
+        'Відкрити вкладку “Система” та пояснити Flutter → FastAPI → PostgreSQL → підбір фільмів.',
         'Показати backend/main.py і schema.sql як доказ підключення бази даних.',
       ],
       126,
