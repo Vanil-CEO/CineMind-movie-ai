@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: cinemind-postgres
+    environment:
+      POSTGRES_USER: cinemind
+      POSTGRES_PASSWORD: cinemind
+      POSTGRES_DB: cinemind
+    ports:
+      - "5432:5432"
+    volumes:
+      - cinemind_pg_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinemind -d cinemind"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  cinemind_pg_data:

@@ -33,6 +33,12 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Generated presentation scratch/preview files
+docs/presentation-assets/
+docs/presentation-work/
+docs/presentations/preview/
+docs/presentations/*.inspect.ndjson
+
 # Symbolication related
 app.*.symbols
 
