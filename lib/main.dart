@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import 'platform_link_stub.dart'
@@ -507,24 +509,117 @@ class CineMindRoot extends StatefulWidget {
 }
 
 class _CineMindRootState extends State<CineMindRoot> {
+  static const _storageKey = 'cinemind_profile_v2';
+
   bool signedIn = false;
   bool preferencesReady = false;
-  String userName = 'Іван';
+  bool rememberMe = false;
+  String userName = '';
   String profilePhotoUrl = '';
-  String profileBio = 'Sci-fi, Marvel, smart drama';
+  String profileBio = '';
   final movies = List<Movie>.from(moviesSeed);
-  final preferences = <String>{'Фантастика', 'Marvel'};
+  final preferences = <String>{};
   final favorites = <int>{};
   final watchLater = <int>{};
   final watched = <int>{};
   final ratings = <int, int>{};
   final comments = <int, List<String>>{};
 
-  void signIn(String name) {
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedProfile();
+  }
+
+  void _loadSavedProfile() {
+    final raw = readLocalValue(_storageKey);
+    if (raw == null || raw.isEmpty) return;
+    try {
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      if (data['rememberMe'] != true) return;
+      setState(() {
+        rememberMe = true;
+        signedIn = true;
+        preferencesReady = data['preferencesReady'] == true;
+        userName = (data['userName'] as String?) ?? '';
+        profilePhotoUrl = (data['profilePhotoUrl'] as String?) ?? '';
+        profileBio = (data['profileBio'] as String?) ?? '';
+        preferences
+          ..clear()
+          ..addAll(((data['preferences'] as List?) ?? const []).cast<String>());
+        favorites
+          ..clear()
+          ..addAll(_intList(data['favorites']));
+        watchLater
+          ..clear()
+          ..addAll(_intList(data['watchLater']));
+        watched
+          ..clear()
+          ..addAll(_intList(data['watched']));
+        ratings
+          ..clear()
+          ..addAll(_intMap(data['ratings']));
+        comments
+          ..clear()
+          ..addAll(_commentsMap(data['comments']));
+      });
+    } catch (_) {
+      removeLocalValue(_storageKey);
+    }
+  }
+
+  static Set<int> _intList(Object? value) => {
+    for (final item in ((value as List?) ?? const [])) int.parse('$item'),
+  };
+
+  static Map<int, int> _intMap(Object? value) {
+    final source = (value as Map?) ?? const {};
+    return {
+      for (final entry in source.entries)
+        int.parse('${entry.key}'): int.parse('${entry.value}'),
+    };
+  }
+
+  static Map<int, List<String>> _commentsMap(Object? value) {
+    final source = (value as Map?) ?? const {};
+    return {
+      for (final entry in source.entries)
+        int.parse('${entry.key}'): (entry.value as List).cast<String>(),
+    };
+  }
+
+  void _persistProfile() {
+    if (!rememberMe) return;
+    saveLocalValue(
+      _storageKey,
+      jsonEncode({
+        'rememberMe': rememberMe,
+        'signedIn': signedIn,
+        'preferencesReady': preferencesReady,
+        'userName': userName,
+        'profilePhotoUrl': profilePhotoUrl,
+        'profileBio': profileBio,
+        'preferences': preferences.toList(),
+        'favorites': favorites.toList(),
+        'watchLater': watchLater.toList(),
+        'watched': watched.toList(),
+        'ratings': ratings.map((key, value) => MapEntry('$key', value)),
+        'comments': comments.map((key, value) => MapEntry('$key', value)),
+      }),
+    );
+  }
+
+  void signIn(String name, bool shouldRemember) {
     setState(() {
       userName = name.trim().isEmpty ? 'Користувач' : name.trim();
+      rememberMe = shouldRemember;
       signedIn = true;
     });
+    if (rememberMe) {
+      _persistProfile();
+    } else {
+      removeLocalValue(_storageKey);
+    }
   }
 
   void savePreferences(Set<String> value) {
@@ -534,10 +629,12 @@ class _CineMindRootState extends State<CineMindRoot> {
         ..addAll(value);
       preferencesReady = true;
     });
+    _persistProfile();
   }
 
   void toggle(Set<int> set, int id) {
     setState(() => set.contains(id) ? set.remove(id) : set.add(id));
+    _persistProfile();
   }
 
   void rate(Movie movie, int value) {
@@ -545,6 +642,7 @@ class _CineMindRootState extends State<CineMindRoot> {
       ratings[movie.id] = value;
       watched.add(movie.id);
     });
+    _persistProfile();
   }
 
   void addComment(Movie movie, String text) {
@@ -554,6 +652,7 @@ class _CineMindRootState extends State<CineMindRoot> {
       comments.putIfAbsent(movie.id, () => <String>[]).insert(0, trimmed);
       watched.add(movie.id);
     });
+    _persistProfile();
   }
 
   void updateProfile({
@@ -566,6 +665,7 @@ class _CineMindRootState extends State<CineMindRoot> {
       profilePhotoUrl = photoUrl.trim();
       profileBio = bio.trim().isEmpty ? profileBio : bio.trim();
     });
+    _persistProfile();
   }
 
   void addMovie(Movie movie) => setState(() => movies.add(movie));
@@ -578,6 +678,7 @@ class _CineMindRootState extends State<CineMindRoot> {
       watched.remove(movie.id);
       ratings.remove(movie.id);
     });
+    _persistProfile();
   }
 
   @override
@@ -616,16 +717,17 @@ class _CineMindRootState extends State<CineMindRoot> {
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key, required this.onSignIn});
 
-  final ValueChanged<String> onSignIn;
+  final void Function(String name, bool rememberMe) onSignIn;
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final nameController = TextEditingController(text: 'Іван');
-  final emailController = TextEditingController(text: 'ivan@example.com');
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
   bool register = true;
+  bool rememberMe = false;
 
   @override
   void dispose() {
@@ -698,15 +800,40 @@ class _AuthScreenState extends State<AuthScreen> {
                           const SizedBox(height: 12),
                           TextField(
                             controller: emailController,
+                            keyboardType: TextInputType.emailAddress,
                             decoration: const InputDecoration(
                               labelText: 'Email',
                               prefixIcon: Icon(Icons.alternate_email_rounded),
                             ),
                           ),
+                          const SizedBox(height: 10),
+                          Material(
+                            color: Colors.transparent,
+                            child: CheckboxListTile(
+                              value: rememberMe,
+                              onChanged: (value) {
+                                setState(() => rememberMe = value ?? false);
+                              },
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              controlAffinity: ListTileControlAffinity.leading,
+                              activeColor: AppColors.blue,
+                              title: const Text("Запам'ятати мене"),
+                              subtitle: Text(
+                                'Наступного разу CineMind відкриється одразу.',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: .58),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
                           const SizedBox(height: 16),
                           FilledButton.icon(
-                            onPressed: () =>
-                                widget.onSignIn(nameController.text),
+                            onPressed: () => widget.onSignIn(
+                              nameController.text,
+                              rememberMe,
+                            ),
                             icon: const Icon(Icons.play_circle_rounded),
                             label: Text(
                               register ? 'Створити профіль' : 'Увійти',
@@ -3204,10 +3331,6 @@ class MovieDetailsScreen extends StatelessWidget {
       data.ratings,
       data.watched,
     );
-    final isFavorite = data.favorites.contains(movie.id);
-    final isLater = data.watchLater.contains(movie.id);
-    final isWatched = data.watched.contains(movie.id);
-    final rating = data.ratings[movie.id];
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -3264,43 +3387,67 @@ class MovieDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 14),
                   MatchMeter(value: score, label: 'Personal match'),
                   const SizedBox(height: 14),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: [
-                      FilledButton.icon(
-                        onPressed: () => openTrailer(context, movie),
-                        icon: const Icon(Icons.play_circle_rounded),
-                        label: const Text('Дивитись трейлер'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: () => data.onFavorite(movie),
-                        icon: Icon(
-                          isFavorite
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                        ),
-                        label: Text(isFavorite ? 'В обраному' : 'Обране'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: () => data.onWatchLater(movie),
-                        icon: Icon(
-                          isLater
-                              ? Icons.bookmark_rounded
-                              : Icons.bookmark_border_rounded,
-                        ),
-                        label: Text(isLater ? 'Заплановано' : 'Пізніше'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: () => data.onWatched(movie),
-                        icon: Icon(
-                          isWatched
-                              ? Icons.visibility_rounded
-                              : Icons.visibility_outlined,
-                        ),
-                        label: Text(isWatched ? 'Переглянуто' : 'Переглянути'),
-                      ),
-                    ],
+                  StatefulBuilder(
+                    builder: (context, refresh) {
+                      final isFavorite = data.favorites.contains(movie.id);
+                      final isLater = data.watchLater.contains(movie.id);
+                      final isWatched = data.watched.contains(movie.id);
+                      return Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: () => openTrailer(context, movie),
+                            icon: const Icon(Icons.play_circle_rounded),
+                            label: const Text('Дивитись трейлер'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              data.onFavorite(movie);
+                              refresh(() {});
+                            },
+                            style: stateActionStyle(
+                              isFavorite,
+                              AppColors.coral,
+                            ),
+                            icon: Icon(
+                              isFavorite
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                            ),
+                            label: Text(isFavorite ? 'В обраному' : 'Обране'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              data.onWatchLater(movie);
+                              refresh(() {});
+                            },
+                            style: stateActionStyle(isLater, AppColors.amber),
+                            icon: Icon(
+                              isLater
+                                  ? Icons.bookmark_rounded
+                                  : Icons.bookmark_border_rounded,
+                            ),
+                            label: Text(isLater ? 'Заплановано' : 'Пізніше'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              data.onWatched(movie);
+                              refresh(() {});
+                            },
+                            style: stateActionStyle(isWatched, AppColors.mint),
+                            icon: Icon(
+                              isWatched
+                                  ? Icons.visibility_rounded
+                                  : Icons.visibility_outlined,
+                            ),
+                            label: Text(
+                              isWatched ? 'Переглянуто' : 'Переглянути',
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 18),
                   TrailerPanel(movie: movie),
@@ -3367,9 +3514,14 @@ class MovieDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 18),
                   Text('Оцінка', style: Theme.of(context).textTheme.titleLarge),
-                  AnimatedRatingBar(
-                    value: rating ?? 0,
-                    onRate: (value) => data.onRate(movie, value),
+                  StatefulBuilder(
+                    builder: (context, refresh) => AnimatedRatingBar(
+                      value: data.ratings[movie.id] ?? 0,
+                      onRate: (value) {
+                        data.onRate(movie, value);
+                        refresh(() {});
+                      },
+                    ),
                   ),
                   const SizedBox(height: 18),
                   MovieComments(movie: movie, data: data),
@@ -3397,56 +3549,93 @@ class AnimatedRatingBar extends StatefulWidget {
   State<AnimatedRatingBar> createState() => _AnimatedRatingBarState();
 }
 
+ButtonStyle stateActionStyle(bool active, Color color) {
+  return OutlinedButton.styleFrom(
+    foregroundColor: active ? color : AppColors.blue,
+    side: BorderSide(color: active ? color : Colors.white38),
+    backgroundColor: active ? color.withValues(alpha: .18) : Colors.transparent,
+  ).copyWith(
+    overlayColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.hovered) ||
+          states.contains(WidgetState.pressed)) {
+        return color.withValues(alpha: active ? .28 : .14);
+      }
+      return null;
+    }),
+  );
+}
+
 class _AnimatedRatingBarState extends State<AnimatedRatingBar> {
   int pulse = 0;
+  int hover = 0;
 
   @override
   Widget build(BuildContext context) {
+    final previewValue = hover == 0 ? widget.value : hover;
     return GlassPanel(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Row(
-        children: [
-          for (var value = 1; value <= 5; value++)
-            AnimatedScale(
-              scale: pulse == value ? 1.34 : 1,
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutBack,
-              child: IconButton(
-                tooltip: '$value / 5',
-                onPressed: () {
-                  setState(() => pulse = value);
-                  widget.onRate(value);
-                  Future<void>.delayed(const Duration(milliseconds: 220), () {
-                    if (mounted) setState(() => pulse = 0);
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Оцінка збережена: $value/5'),
-                      duration: const Duration(milliseconds: 900),
+      child: MouseRegion(
+        onExit: (_) => setState(() => hover = 0),
+        child: Row(
+          children: [
+            for (var value = 1; value <= 5; value++)
+              MouseRegion(
+                onEnter: (_) => setState(() => hover = value),
+                child: AnimatedScale(
+                  scale: pulse == value ? 1.34 : (hover == value ? 1.14 : 1),
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutBack,
+                  child: IconButton(
+                    tooltip: '$value / 5',
+                    style: IconButton.styleFrom(
+                      backgroundColor: value <= previewValue
+                          ? AppColors.amber.withValues(alpha: .14)
+                          : Colors.transparent,
                     ),
-                  );
-                },
-                icon: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 160),
-                  transitionBuilder: (child, animation) =>
-                      ScaleTransition(scale: animation, child: child),
-                  child: Icon(
-                    value <= widget.value
-                        ? Icons.star_rounded
-                        : Icons.star_border_rounded,
-                    key: ValueKey('${widget.value}-$value'),
-                    color: AppColors.amber,
-                    size: 32,
+                    onPressed: () {
+                      setState(() {
+                        pulse = value;
+                        hover = value;
+                      });
+                      widget.onRate(value);
+                      Future<void>.delayed(
+                        const Duration(milliseconds: 220),
+                        () {
+                          if (mounted) setState(() => pulse = 0);
+                        },
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Оцінка збережена: $value/5'),
+                          duration: const Duration(milliseconds: 900),
+                        ),
+                      );
+                    },
+                    icon: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 160),
+                      transitionBuilder: (child, animation) =>
+                          ScaleTransition(scale: animation, child: child),
+                      child: Icon(
+                        value <= previewValue
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
+                        key: ValueKey('$previewValue-$value'),
+                        color: value <= previewValue
+                            ? AppColors.amber
+                            : AppColors.amber.withValues(alpha: .55),
+                        size: 32,
+                      ),
+                    ),
                   ),
                 ),
               ),
+            const Spacer(),
+            Text(
+              previewValue == 0 ? 'ще без оцінки' : '$previewValue/5',
+              style: const TextStyle(fontWeight: FontWeight.w900),
             ),
-          const Spacer(),
-          Text(
-            widget.value == 0 ? 'ще без оцінки' : '${widget.value}/5',
-            style: const TextStyle(fontWeight: FontWeight.w900),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -3502,6 +3691,7 @@ class _MovieCommentsState extends State<MovieComments> {
               onPressed: () {
                 widget.data.onComment(widget.movie, controller.text);
                 controller.clear();
+                setState(() {});
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Коментар додано і передано AI-профілю'),

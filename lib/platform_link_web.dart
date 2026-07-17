@@ -6,3 +6,13 @@ Future<bool> openExternalUrl(String url) async {
   html.window.open(url, '_blank', 'noopener,noreferrer');
   return true;
 }
+
+String? readLocalValue(String key) => html.window.localStorage[key];
+
+void saveLocalValue(String key, String value) {
+  html.window.localStorage[key] = value;
+}
+
+void removeLocalValue(String key) {
+  html.window.localStorage.remove(key);
+}
